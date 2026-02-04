@@ -170,3 +170,41 @@ export function exportUserDataAsJSON(userId: string): string {
   const data = getUserData(userId);
   return JSON.stringify(data, null, 2);
 }
+
+export function suspendUser(userId: string): boolean {
+  const users = getAllUsers();
+  const index = users.findIndex(u => u.id === userId);
+  if (index === -1) return false;
+
+  users[index].suspended = !users[index].suspended;
+  localStorage.setItem('expedium_users', JSON.stringify(users));
+
+  // If suspending, also invalidate their session
+  if (users[index].suspended) {
+    localStorage.removeItem('expedium_session');
+  }
+
+  return true;
+}
+
+export function deleteUser(userId: string): boolean {
+  const users = getAllUsers();
+  const index = users.findIndex(u => u.id === userId);
+  if (index === -1) return false;
+
+  // Remove user from users array
+  users.splice(index, 1);
+  localStorage.setItem('expedium_users', JSON.stringify(users));
+
+  // Remove all user-specific data
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.includes(userId)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+
+  return true;
+}

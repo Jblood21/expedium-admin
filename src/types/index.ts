@@ -6,6 +6,7 @@ export interface StoredUser {
   name: string;
   company?: string;
   createdAt: number;
+  suspended?: boolean;
 }
 
 export interface Session {

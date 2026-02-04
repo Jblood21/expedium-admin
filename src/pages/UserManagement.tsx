@@ -12,7 +12,11 @@ import {
   Receipt,
   ScrollText,
   Check,
-  X
+  X,
+  PauseCircle,
+  PlayCircle,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import {
   getAllPlatformData,
@@ -20,12 +24,19 @@ import {
   getUserDataVolume,
   formatBytes,
   formatDate,
-  exportUserDataAsJSON
+  exportUserDataAsJSON,
+  suspendUser,
+  deleteUser
 } from '../utils/dataReader';
 import { StoredUser, UserData, PlatformData } from '../types';
 
 type SortField = 'name' | 'email' | 'company' | 'createdAt' | 'dataVolume';
 type SortDirection = 'asc' | 'desc';
+
+interface ConfirmAction {
+  type: 'suspend' | 'unsuspend' | 'delete';
+  user: StoredUser;
+}
 
 const UserManagement: React.FC = () => {
   const [platformData, setPlatformData] = useState<PlatformData | null>(null);
@@ -35,8 +46,9 @@ const UserManagement: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
 
-  useEffect(() => {
+  const loadData = () => {
     setIsLoading(true);
     try {
       const data = getAllPlatformData();
@@ -48,7 +60,36 @@ const UserManagement: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
+
+  const handleSuspendToggle = (user: StoredUser) => {
+    setConfirmAction({
+      type: user.suspended ? 'unsuspend' : 'suspend',
+      user,
+    });
+  };
+
+  const handleDelete = (user: StoredUser) => {
+    setConfirmAction({ type: 'delete', user });
+  };
+
+  const executeAction = () => {
+    if (!confirmAction) return;
+
+    if (confirmAction.type === 'delete') {
+      deleteUser(confirmAction.user.id);
+    } else {
+      suspendUser(confirmAction.user.id);
+    }
+
+    setConfirmAction(null);
+    setExpandedUserId(null);
+    loadData();
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -132,7 +173,8 @@ const UserManagement: React.FC = () => {
     return 0;
   });
 
-  const getUserStatus = (user: StoredUser): 'active' | 'partial' | 'inactive' => {
+  const getUserStatus = (user: StoredUser): 'active' | 'partial' | 'inactive' | 'suspended' => {
+    if (user.suspended) return 'suspended';
     const userData = platformData.userData.get(user.id);
     if (!userData) return 'inactive';
 
@@ -150,12 +192,14 @@ const UserManagement: React.FC = () => {
     return 'inactive';
   };
 
-  const getStatusColor = (status: 'active' | 'partial' | 'inactive') => {
+  const getStatusColor = (status: 'active' | 'partial' | 'inactive' | 'suspended') => {
     switch (status) {
       case 'active':
         return '#10b981';
       case 'partial':
         return '#f59e0b';
+      case 'suspended':
+        return '#ef4444';
       case 'inactive':
         return '#6b7280';
     }
@@ -316,7 +360,7 @@ const UserManagement: React.FC = () => {
               <th onClick={() => handleSort('dataVolume')} className="sortable">
                 Data Volume <SortIcon field="dataVolume" />
               </th>
-              <th style={{ width: '180px' }}>Actions</th>
+              <th style={{ width: '280px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -333,12 +377,20 @@ const UserManagement: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <td>
-                      <div
-                        className="status-dot"
-                        style={{ backgroundColor: getStatusColor(status) }}
-                      />
+                      <div className="user-status-cell">
+                        <div
+                          className="status-dot"
+                          style={{ backgroundColor: getStatusColor(status) }}
+                        />
+                        {status === 'suspended' && (
+                          <span className="suspended-label">Paused</span>
+                        )}
+                      </div>
                     </td>
-                    <td>{user.name}</td>
+                    <td>
+                      {user.name}
+                      {user.suspended && <span className="suspended-badge">Paused</span>}
+                    </td>
                     <td>{user.email}</td>
                     <td>{user.company || '-'}</td>
                     <td>{formatDate(user.createdAt)}</td>
@@ -360,6 +412,22 @@ const UserManagement: React.FC = () => {
                         >
                           <Download size={16} />
                           Export
+                        </button>
+                        <button
+                          className={`btn-sm ${user.suspended ? 'btn-success' : 'btn-warning'}`}
+                          onClick={() => handleSuspendToggle(user)}
+                          title={user.suspended ? 'Resume user' : 'Pause user'}
+                        >
+                          {user.suspended ? <PlayCircle size={16} /> : <PauseCircle size={16} />}
+                          {user.suspended ? 'Resume' : 'Pause'}
+                        </button>
+                        <button
+                          className="btn-danger btn-sm"
+                          onClick={() => handleDelete(user)}
+                          title="Delete user"
+                        >
+                          <Trash2 size={16} />
+                          Delete
                         </button>
                       </div>
                     </td>
@@ -383,6 +451,118 @@ const UserManagement: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmAction && (
+        <div className="modal-overlay" onClick={() => setConfirmAction(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <AlertTriangle
+                  size={22}
+                  style={{ color: confirmAction.type === 'delete' ? 'var(--admin-danger)' : 'var(--admin-warning)' }}
+                />
+                {confirmAction.type === 'delete' ? 'Delete User' :
+                 confirmAction.type === 'suspend' ? 'Pause User' : 'Resume User'}
+              </h3>
+              <button
+                className="btn-secondary btn-icon"
+                onClick={() => setConfirmAction(null)}
+                style={{ width: '32px', height: '32px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              {confirmAction.type === 'delete' ? (
+                <>
+                  <p style={{ marginBottom: '16px', fontSize: '15px' }}>
+                    Are you sure you want to <strong>permanently delete</strong> this user and all their data?
+                  </p>
+                  <div className="confirm-user-info">
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Name:</span>
+                      <span className="confirm-value">{confirmAction.user.name}</span>
+                    </div>
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Email:</span>
+                      <span className="confirm-value">{confirmAction.user.email}</span>
+                    </div>
+                    {confirmAction.user.company && (
+                      <div className="confirm-user-row">
+                        <span className="confirm-label">Company:</span>
+                        <span className="confirm-value">{confirmAction.user.company}</span>
+                      </div>
+                    )}
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Data:</span>
+                      <span className="confirm-value">{formatBytes(getUserDataVolume(confirmAction.user.id))}</span>
+                    </div>
+                  </div>
+                  <p style={{ marginTop: '16px', fontSize: '13px', color: 'var(--admin-danger)' }}>
+                    This action cannot be undone. All user data will be permanently removed.
+                  </p>
+                </>
+              ) : confirmAction.type === 'suspend' ? (
+                <>
+                  <p style={{ marginBottom: '16px', fontSize: '15px' }}>
+                    Are you sure you want to <strong>pause</strong> this user's account?
+                  </p>
+                  <div className="confirm-user-info">
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Name:</span>
+                      <span className="confirm-value">{confirmAction.user.name}</span>
+                    </div>
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Email:</span>
+                      <span className="confirm-value">{confirmAction.user.email}</span>
+                    </div>
+                  </div>
+                  <p style={{ marginTop: '16px', fontSize: '13px', color: 'var(--admin-text-muted)' }}>
+                    The user will not be able to log in while paused. Their data will be preserved.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ marginBottom: '16px', fontSize: '15px' }}>
+                    Are you sure you want to <strong>resume</strong> this user's account?
+                  </p>
+                  <div className="confirm-user-info">
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Name:</span>
+                      <span className="confirm-value">{confirmAction.user.name}</span>
+                    </div>
+                    <div className="confirm-user-row">
+                      <span className="confirm-label">Email:</span>
+                      <span className="confirm-value">{confirmAction.user.email}</span>
+                    </div>
+                  </div>
+                  <p style={{ marginTop: '16px', fontSize: '13px', color: 'var(--admin-text-muted)' }}>
+                    The user will be able to log in again.
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setConfirmAction(null)}>
+                Cancel
+              </button>
+              <button
+                className={`btn ${confirmAction.type === 'delete' ? 'btn-danger' : confirmAction.type === 'suspend' ? 'btn-warning' : 'btn-success'}`}
+                onClick={executeAction}
+              >
+                {confirmAction.type === 'delete' ? (
+                  <><Trash2 size={16} /> Delete Permanently</>
+                ) : confirmAction.type === 'suspend' ? (
+                  <><PauseCircle size={16} /> Pause User</>
+                ) : (
+                  <><PlayCircle size={16} /> Resume User</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

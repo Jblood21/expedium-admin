@@ -2064,3 +2064,113 @@ input:focus-visible,
   padding: 2px 8px;
   border-radius: 10px;
 }
+
+/* === 23. USER MANAGEMENT - SUSPEND / DELETE === */
+.btn-warning {
+  background: var(--admin-warning);
+  color: #000;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.btn-warning:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-success {
+  background: var(--admin-success);
+  color: white;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.btn-success:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: none;
+}
+
+.suspended-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger);
+  vertical-align: middle;
+}
+
+.suspended-label {
+  font-size: 11px;
+  color: var(--admin-danger);
+  font-weight: 600;
+}
+
+.user-status-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.confirm-user-info {
+  background: var(--admin-surface-alt);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+}
+
+.confirm-user-row {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.confirm-user-row + .confirm-user-row {
+  border-top: 1px solid var(--admin-border-light);
+}
+
+.confirm-label {
+  color: var(--admin-text-muted);
+  min-width: 80px;
+}
+
+.confirm-value {
+  color: var(--admin-text);
+  font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
