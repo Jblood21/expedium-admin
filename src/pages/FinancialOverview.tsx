@@ -6,8 +6,6 @@ import {
   calculateTotalExpenses,
   formatCurrency
 } from '../utils/dataReader';
-import type { UserData, Transaction, Invoice } from '../types';
-
 type SortColumn = 'name' | 'company' | 'income' | 'expenses' | 'net' | 'invoices' | 'transactions';
 type SortDirection = 'asc' | 'desc';
 

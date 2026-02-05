@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import {
   getAllPlatformData,
-  getAllUserDataArray,
   getTotalStorageUsed,
   formatBytes,
   formatDate,
@@ -93,22 +92,6 @@ const PlatformSettings: React.FC = () => {
   const platformRunningSince = users.length > 0
     ? formatDate(Math.min(...users.map((u) => u.createdAt)))
     : 'No users yet';
-
-  // Count active features
-  const featuresActive = users.reduce((count, user) => {
-    const userData = platformData[user.id] || {};
-    const activeFeatures = new Set<string>();
-
-    if (userData.customers && userData.customers.length > 0) activeFeatures.add('crm');
-    if (userData.employees && userData.employees.length > 0) activeFeatures.add('hr');
-    if (userData.transactions && userData.transactions.length > 0) activeFeatures.add('finance');
-    if (userData.proposals && userData.proposals.length > 0) activeFeatures.add('sales');
-    if (userData.outreachContacts && userData.outreachContacts.length > 0) activeFeatures.add('outreach');
-    if (userData.strategyGoals && userData.strategyGoals.length > 0) activeFeatures.add('strategy');
-    if (userData.competitors && userData.competitors.length > 0) activeFeatures.add('competitor');
-
-    return count + activeFeatures.size;
-  }, 0);
 
   const uniqueActiveFeatures = new Set<string>();
   users.forEach((user) => {

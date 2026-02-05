@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Clock, TrendingUp, Database, Activity } from 'lucide-react';
 import {
   getAllPlatformData,
-  getAllUserDataArray,
   getUserDataVolume,
   getTotalStorageUsed,
   formatBytes,
@@ -24,15 +23,12 @@ interface PlatformEvent {
 const ActivityLog: React.FC = () => {
   const [users, setUsers] = useState<StoredUser[]>([]);
   const [platformData, setPlatformData] = useState<{ [userId: string]: UserData }>({});
-  const [refreshKey, setRefreshKey] = useState(0);
-
   useEffect(() => {
     loadData();
-  }, [refreshKey]);
+  }, []);
 
   const loadData = () => {
     const allData = getAllPlatformData();
-    const allUserData = getAllUserDataArray(allData);
     setUsers(allData.users);
     const dataMap: { [userId: string]: UserData } = {};
     allData.users.forEach(u => {

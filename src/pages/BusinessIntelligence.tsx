@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import { getAllPlatformData, getAllUserDataArray } from '../utils/dataReader';
-import type { UserData } from '../types';
-
 export default function BusinessIntelligence() {
   const platformData = useMemo(() => getAllPlatformData(), []);
   const allUserData = useMemo(() => getAllUserDataArray(platformData), [platformData]);

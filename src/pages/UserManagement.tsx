@@ -40,7 +40,7 @@ interface ConfirmAction {
 
 const UserManagement: React.FC = () => {
   const [platformData, setPlatformData] = useState<PlatformData | null>(null);
-  const [userDataArray, setUserDataArray] = useState<UserData[]>([]);
+  const [, setUserDataArray] = useState<UserData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('createdAt');

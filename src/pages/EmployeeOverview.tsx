@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import { getAllPlatformData, getAllUserDataArray, getTotalEmployees, formatCurrency } from '../utils/dataReader';
-import { StoredUser, UserData, Employee } from '../types';
-
 const EmployeeOverview: React.FC = () => {
   const platformData = getAllPlatformData();
   const allUserData = getAllUserDataArray(platformData);

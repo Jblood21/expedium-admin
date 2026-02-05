@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import { getAllPlatformData, getAllUserDataArray } from '../utils/dataReader';
-import { StoredUser, UserData, Customer } from '../types';
-
 const CRMOverview: React.FC = () => {
   const platformData = getAllPlatformData();
   const allUserData = getAllUserDataArray(platformData);
